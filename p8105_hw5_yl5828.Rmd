@@ -35,11 +35,11 @@ scale_fill_discrete = scale_fill_viridis_d
 
 
 
-### Problem 0
+### Problem 1
 
 #### Create the required function to check if there are any duplicate birthdays.
 
-```{r create function}
+```{r create function for checking duplicate}
 birthday_sim <- function(n_people) {
   birthdays <- sample(1:365, size = n_people, replace = TRUE)
   any(duplicated(birthdays))
@@ -48,7 +48,7 @@ birthday_sim <- function(n_people) {
 
 #### Repeat the function 10000 times and compute and probablity that at least two people in the group will share a birthday.
 
-```{r}
+```{r repeat and find average probablity}
 set.seed(1)
 
 sim_results <- 
@@ -60,7 +60,7 @@ sim_results <-
 ```
 
 #### Creae a plot to show the results.
-```{r plot}
+```{r plot graph}
 ggplot(sim_results, aes(x = group_size, y = prob_shared)) +
   geom_line() +
   geom_point() +
@@ -72,6 +72,31 @@ ggplot(sim_results, aes(x = group_size, y = prob_shared)) +
   ) +
   theme_minimal()
 ```
+
+#### Comment on the plot:
+The curve shows an exponential-like growth, rapidly increasing from near-zero probability with small groups to near-certainty with larger groups.
+The simulation shows that with just 23 people, there's approximately a 50% chance that two people share a birthday. With 30 people, the probability rises to about 70%. With 40 people, the probability exceeds 90%. With 50 people, the probability is nearly 97%.
+
+
+### Problem 2
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
