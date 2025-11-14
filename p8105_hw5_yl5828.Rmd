@@ -183,18 +183,88 @@ The dotted line (only rejected nulls): Shows overestimation when power is low (s
 
 ### Problem 3
 
+
+#### Read in dataset
 ```{r read in data}
 url <- "https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv"
 
 homicides <- read_csv(url)
 ```
 
+#### Create variable and sum totals and counts
+```{r create required variable}
+homicides_city <- homicides %>%
+  mutate(
+    city_state = str_c(city, ", ", state),
+    is_unsolved = disposition %in% c("Closed without arrest", "Open/No arrest")
+  )
 
+city_summary <- homicides_city %>%
+  group_by(city_state) %>%
+  summarize(
+    total = n(),
+    unsolved = sum(is_unsolved),
+    .groups = "drop"
+  )
 
+city_summary
+```
 
+#### Estimate and CI for Baltimore
+```{r baltimore results}
+baltimore <- city_summary %>%
+  filter(city_state == "Baltimore, MD")
 
+baltimore
 
+baltimore_prop <- prop.test(
+  x = baltimore$unsolved,
+  n = baltimore$total
+)
 
+baltimore_tidy <- tidy(baltimore_prop)
+baltimore_tidy
+
+# pull out estimate and CI
+baltimore_estimate <- baltimore_tidy %>% pull(estimate)
+baltimore_ci_low   <- baltimore_tidy %>% pull(conf.low)
+baltimore_ci_high  <- baltimore_tidy %>% pull(conf.high)
+
+baltimore_estimate
+baltimore_ci_low
+baltimore_ci_high
+```
+
+#### Run the same for every city
+```{r every city result}
+city_results <- city_summary %>%
+  mutate(
+    prop_test = map2(unsolved, total, ~ prop.test(.x, .y)),
+    prop_tidy = map(prop_test, tidy)
+  ) %>%
+  unnest(prop_tidy)
+
+city_results
+```
+
+#### Plot the estimates with CIs for each city
+```{r plot graphs}
+city_results %>%
+  mutate(
+    city_state = fct_reorder(city_state, estimate)
+  ) %>%
+  ggplot(aes(x = city_state, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  coord_flip() +
+  labs(
+    x = "",
+    y = "Proportion of homicides unsolved",
+    title = "Estimated proportion of unsolved homicides by city",
+    subtitle = "95% confidence intervals from prop.test"
+  ) +
+  theme_minimal()
+```
 
 
 
