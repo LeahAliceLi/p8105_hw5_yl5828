@@ -11,6 +11,7 @@ editor_options:
 library(tidyverse)
 library(patchwork)
 library(rvest)
+library(broom)
 
 library(p8105.datasets)
 
@@ -80,14 +81,113 @@ The simulation shows that with just 23 people, there's approximately a 50% chanc
 
 ### Problem 2
 
-```{r}
+#### Define parameters
+```{r define parameters}
+n     <- 30
+sigma <- 5
+mu_vals <- 0:6  
+n_sims <- 5000
+```
+
+#### Create a function to generate one dataset and run one-sample t-test.
+```{r create one sample t-test function}
+sim_one <- function(mu, n = 30, sigma = 5) {
+  x <- rnorm(n, mean = mu, sd = sigma)
+  
+  t.test(x, mu = 0) |>
+    tidy() |>
+    transmute(
+      mu_hat  = estimate,
+      p_value = p.value
+    )
+}
+```
+
+#### Run the simulation of 5000 datasets for each mu value
+```{r run the function for 5000 datasets}
+sim_results <- map_dfr(mu_vals, function(mu) {
+  tibble(
+    mu_true = mu,
+    sim_id  = 1:n_sims
+  ) |>
+    mutate(
+      res = map(sim_id, ~ sim_one(mu))
+    ) |>
+    unnest(cols = res)
+})
+
+head(sim_results)
+```
+
+#### Plot1: Power vs. effect size
+
+```{r plot1 Power vs. effect size}
+power_df <- sim_results %>%
+  group_by(mu_true) %>%
+  summarize(
+    power = mean(p_value < 0.05),
+    .groups = "drop"
+  )
+
+ggplot(power_df, aes(x = mu_true, y = power)) +
+  geom_line() +
+  geom_point() +
+  labs(
+    x = "True mean μ",
+    y = "Power (Pr reject H0: μ = 0)",
+    title = "Power of one-sample t-test (n = 30, σ = 5)"
+  ) +
+  theme_minimal()
 
 ```
 
+#### Comment:
+Power is about 0.05 when μ = 0 (just the type I error rate). As the true mean moves farther from 0 (larger effect size), power increases rapidly and approaches 1 by μ around 5–6. So larger effect sizes leads to higher power.
+
+
+#### Plot2: Average Estimates vs. True mu
+
+```{r plot2 Average Estimates vs. True mu}
+mu_summary <- sim_results %>%
+  group_by(mu_true) %>%
+  summarize(
+    mean_mu_hat_all    = mean(mu_hat),
+    mean_mu_hat_reject = mean(mu_hat[p_value < 0.05]),
+    .groups = "drop"
+  )
+
+mu_summary
+```
+
+```{r}
+ggplot(mu_summary, aes(x = mu_true)) +
+  geom_line(aes(y = mean_mu_hat_all), linewidth = 1) +
+  geom_point(aes(y = mean_mu_hat_all)) +
+  geom_line(aes(y = mean_mu_hat_reject), linetype = "dashed") +
+  geom_point(aes(y = mean_mu_hat_reject), shape = 21, fill = "white") +
+  labs(
+    x = "True mean μ",
+    y = "Average estimate of μ̂",
+    title = "Average μ̂ overall vs. only among significant tests",
+    subtitle = "Solid = all samples, Dashed = only where H0 was rejected"
+  ) +
+  theme_minimal()
+
+```
+
+#### Comment:
+The solid line (all samples): Falls perfectly on the 45° diagonal line, showing that μ̂ is an unbiased estimator of μ across all samples
+The dotted line (only rejected nulls): Shows overestimation when power is low (small effect sizes), then converges to the true value as power increases
 
 
 
+### Problem 3
 
+```{r read in data}
+url <- "https://raw.githubusercontent.com/washingtonpost/data-homicides/master/homicide-data.csv"
+
+homicides <- read_csv(url)
+```
 
 
 
