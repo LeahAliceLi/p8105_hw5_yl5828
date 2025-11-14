@@ -225,7 +225,6 @@ baltimore_prop <- prop.test(
 baltimore_tidy <- tidy(baltimore_prop)
 baltimore_tidy
 
-# pull out estimate and CI
 baltimore_estimate <- baltimore_tidy %>% pull(estimate)
 baltimore_ci_low   <- baltimore_tidy %>% pull(conf.low)
 baltimore_ci_high  <- baltimore_tidy %>% pull(conf.high)
@@ -265,9 +264,6 @@ city_results %>%
   ) +
   theme_minimal()
 ```
-
-
-
 
 
 
