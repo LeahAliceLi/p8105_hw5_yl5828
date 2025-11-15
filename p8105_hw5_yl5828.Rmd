@@ -142,12 +142,12 @@ ggplot(power_df, aes(x = mu_true, y = power)) +
 ```
 
 #### Comment:
-Power is about 0.05 when μ = 0 (just the type I error rate). As the true mean moves farther from 0 (larger effect size), power increases rapidly and approaches 1 by μ around 5–6. So larger effect sizes leads to higher power.
+Power is about 0.05 when mu = 0, which is just the type I error rate. As the true mean moves farther from 0 and become larger effect size, power increases rapidly and approaches 1 by μ around 5–6. So larger effect sizes leads to higher power.
 
 
 #### Plot2: Average Estimates vs. True mu
 
-```{r plot2 Average Estimates vs. True mu}
+```{r compute mu}
 mu_summary <- sim_results %>%
   group_by(mu_true) %>%
   summarize(
@@ -159,7 +159,7 @@ mu_summary <- sim_results %>%
 mu_summary
 ```
 
-```{r}
+```{r plot2: Average Estimates vs. True mu}
 ggplot(mu_summary, aes(x = mu_true)) +
   geom_line(aes(y = mean_mu_hat_all), linewidth = 1) +
   geom_point(aes(y = mean_mu_hat_all)) +
@@ -172,17 +172,16 @@ ggplot(mu_summary, aes(x = mu_true)) +
     subtitle = "Solid = all samples, Dashed = only where H0 was rejected"
   ) +
   theme_minimal()
-
 ```
 
 #### Comment:
-The solid line (all samples): Falls perfectly on the 45° diagonal line, showing that μ̂ is an unbiased estimator of μ across all samples
+The solid line (all samples): Falls perfectly on the 45° diagonal line, showing that mu hat is an unbiased estimator of μ across all samples
 The dotted line (only rejected nulls): Shows overestimation when power is low (small effect sizes), then converges to the true value as power increases
-
+For large mu, almost all tests are significant, so conditioning on rejection doesn’t change much, and the dotted line comes back close to the solid line.
+The sample average of 𝜇̂ across tests for which the null is rejected is usually larger than the true value of 𝜇, since 𝜇̂is an unbiased estimator of mu.
 
 
 ### Problem 3
-
 
 #### Read in dataset
 ```{r read in data}
